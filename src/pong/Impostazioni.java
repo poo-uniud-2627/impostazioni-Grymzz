@@ -27,8 +27,19 @@ public record Impostazioni(int puntiPerVincere, int scartoMinimo, int velocitaPa
      * non è fra 1 e 10, o se velocitaPalla non è fra 1 e 20 (estremi compresi). Il messaggio
      * dice quale valore è sbagliato e perché.
      */
-    public Impostazioni {
-        // scrivete qui
+     public Impostazioni {
+        if (puntiPerVincere < 1 || puntiPerVincere > 99) {
+            throw new IllegalArgumentException(
+                    "puntiPerVincere vale " + puntiPerVincere + ", deve essere fra 1 e 99");
+        }
+        if (scartoMinimo < 1 || scartoMinimo > 10) {
+            throw new IllegalArgumentException(
+                    "scartoMinimo vale " + scartoMinimo + ", deve essere fra 1 e 10");
+        }
+        if (velocitaPalla < 1 || velocitaPalla > 20) {
+            throw new IllegalArgumentException(
+                    "velocitaPalla vale " + velocitaPalla + ", deve essere fra 1 e 20");
+        }
     }
 
     /**
@@ -50,10 +61,87 @@ public record Impostazioni(int puntiPerVincere, int scartoMinimo, int velocitaPa
      *  5. il valore è fuori dal suo intervallo (gli intervalli del costruttore).
      * Se ci sono errori in più righe, il messaggio è quello della riga più in alto.
      */
-    public static Impostazioni leggi(List<String> righe) {
-        return STANDARD; // scrivete qui
-    }
+   public static Impostazioni leggi(List<String> righe) {
+        if (righe == null) {
+            throw new IllegalArgumentException("righe non deve essere null e non deve contenere null");
+        }
+        for (String r : righe) {
+            if (r == null) {
+                throw new IllegalArgumentException("righe non deve contenere null");
+            }
+        }
 
+        int punti = STANDARD.puntiPerVincere();
+        int scarto = STANDARD.scartoMinimo();
+        int vel = STANDARD.velocitaPalla();
+
+        boolean pointflag = false;
+        boolean devflag = false;
+        boolean speedflag = false;
+
+        for (int i = 0; i < righe.size(); i++) {
+            String riga = righe.get(i);
+
+            if (riga.trim().isEmpty() || riga.trim().startsWith("#")) {
+                continue;
+            }
+
+            int uguale = riga.indexOf('=');
+            if (uguale == -1) {
+                throw new IllegalArgumentException("riga " + (i + 1) + ": manca il segno =");
+            }
+
+            String chiave = riga.substring(0, uguale).trim();
+            String valore = riga.substring(uguale + 1).trim();
+
+            int numero;
+            try {
+                numero = Integer.parseInt(valore);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("riga " + (i + 1) + ": il valore non è un numero intero");
+            }
+
+            switch (chiave) {
+                case "puntiPerVincere":
+                    if (pointflag) {
+                        throw new IllegalArgumentException("riga " + (i + 1) + ": la stessa chiave c'era già in una riga precedente");
+                    }
+                    if (numero < 1 || numero > 99) {
+                        throw new IllegalArgumentException("riga " + (i + 1) + ": puntiPerVincere vale " + numero + ", deve essere fra 1 e 99");
+                    }
+                    punti = numero;
+                    pointflag = true;
+                    break;
+
+                case "scartoMinimo":
+                    if (devflag) {
+                        throw new IllegalArgumentException("riga " + (i + 1) + ": la stessa chiave c'era già in una riga precedente");
+                    }
+                    if (numero < 1 || numero > 10) {
+                        throw new IllegalArgumentException("riga " + (i + 1) + ": scartoMinimo vale " + numero + ", deve essere fra 1 e 10");
+                    }
+                    scarto = numero;
+                    devflag = true;
+                    break;
+
+                case "velocitaPalla":
+                    if (speedflag) {
+                        throw new IllegalArgumentException("riga " + (i + 1) + ": la stessa chiave c'era già in una riga precedente");
+                    }
+                    if (numero < 1 || numero > 20) {
+                        throw new IllegalArgumentException("riga " + (i + 1) + ": velocitaPalla vale " + numero + ", deve essere fra 1 e 20");
+                    }
+                    vel = numero;
+                    speedflag = true;
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("riga " + (i + 1) + ": la chiave non è una delle tre");
+            }
+        }
+
+        return new Impostazioni(punti, scarto, vel);
+    }
     /**
      * Legge le impostazioni da un file di testo.
      * Promette: come leggi, con le righe del file.
